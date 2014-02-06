@@ -25,55 +25,41 @@ package com.ricardolorenzo.file.security;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.ricardolorenzo.file.io.IOStreamUtils;
+
 public class FileSummation {
-    public static boolean compare(final byte[] data1, final byte[] data2) throws NoSuchAlgorithmException,
-            FileNotFoundException {
+    public static boolean compare(final byte[] data1, final byte[] data2) throws NoSuchAlgorithmException, IOException {
         if (getMD5Summation(data1).equals(getMD5Summation(data2))) {
             return true;
         }
         return false;
     }
 
-    public static boolean compare(final File file1, final File file2) throws NoSuchAlgorithmException,
-            FileNotFoundException {
+    public static boolean compare(final File file1, final File file2) throws NoSuchAlgorithmException, IOException {
         if (getMD5Summation(file1).equals(getMD5Summation(file2))) {
             return true;
         }
         return false;
     }
 
-    public static String getMD5Summation(final byte[] data) throws NoSuchAlgorithmException, FileNotFoundException {
-        final MessageDigest digest = MessageDigest.getInstance("MD5");
+    public static String getMD5Summation(final byte[] data) throws NoSuchAlgorithmException, IOException {
         final InputStream is = new ByteArrayInputStream(data);
-        final byte[] buffer = new byte[8192];
-        int read = 0;
-        try {
-            while ((read = is.read(buffer)) > 0) {
-                digest.update(buffer, 0, read);
-            }
-            final byte[] md5sum = digest.digest();
-            final BigInteger bi = new BigInteger(1, md5sum);
-            return bi.toString(16);
-        } catch (final IOException e) {
-            throw new RuntimeException("unable to process file for MD5", e);
-        } finally {
-            try {
-                is.close();
-            } catch (final IOException e) {
-            }
-        }
+        return getMD5Summation(is);
     }
 
-    public static String getMD5Summation(final File file) throws NoSuchAlgorithmException, FileNotFoundException {
-        final MessageDigest digest = MessageDigest.getInstance("MD5");
+    public static String getMD5Summation(final File file) throws NoSuchAlgorithmException, IOException {
         final InputStream is = new FileInputStream(file);
+        return getMD5Summation(is);
+    }
+
+    private static String getMD5Summation(final InputStream is) throws NoSuchAlgorithmException, IOException {
+        final MessageDigest digest = MessageDigest.getInstance("MD5");
         final byte[] buffer = new byte[8192];
         int read = 0;
         try {
@@ -83,13 +69,8 @@ public class FileSummation {
             final byte[] _md5sum = digest.digest();
             final BigInteger bi = new BigInteger(1, _md5sum);
             return bi.toString(16);
-        } catch (final IOException e) {
-            throw new RuntimeException("unable to process file for MD5", e);
         } finally {
-            try {
-                is.close();
-            } catch (final IOException e) {
-            }
+            IOStreamUtils.closeQuietly(is);
         }
     }
 }

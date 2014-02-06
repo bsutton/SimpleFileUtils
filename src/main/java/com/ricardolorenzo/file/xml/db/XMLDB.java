@@ -81,8 +81,8 @@ public class XMLDB {
         }
     }
 
-    private ArrayList<XMLAttribute> getAttributes(final Element node) throws XMLDBException {
-        final ArrayList<XMLAttribute> attributes = new ArrayList<XMLAttribute>();
+    private List<XMLAttribute> getAttributes(final Element node) throws XMLDBException {
+        final List<XMLAttribute> attributes = new ArrayList<XMLAttribute>();
         final NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             if ((nl.item(i).getNodeType() == Node.ELEMENT_NODE) && "xmldb:attribute".equals(nl.item(i).getNodeName())) {
@@ -107,16 +107,17 @@ public class XMLDB {
         return null;
     }
 
-    public ArrayList<XMLObject> getObjects() {
+    public List<XMLObject> getObjects() {
         return new ArrayList<XMLObject>(this.objects.values());
     }
 
-    private HashMap<Integer, XMLObject> getObjects(final Element node) throws XMLDBException {
-        final HashMap<Integer, XMLObject> objects = new HashMap<Integer, XMLObject>();
+    private Map<Integer, XMLObject> getObjects(final Element node) throws XMLDBException {
+        final Map<Integer, XMLObject> objects = new HashMap<Integer, XMLObject>();
         final NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
-            if ((nl.item(i).getNodeType() == Node.ELEMENT_NODE) && "xmldb:object".equals(nl.item(i).getNodeName())) {
-                final Element element = (Element) nl.item(i);
+            final Node n = nl.item(i);
+            if ((n.getNodeType() == Node.ELEMENT_NODE) && "xmldb:object".equals(n.getNodeName())) {
+                final Element element = Element.class.cast(n);
                 if (element.hasAttribute("id")) {
                     try {
                         final XMLObject object = new XMLObject(Integer.parseInt(element.getAttribute("id")));
@@ -135,8 +136,8 @@ public class XMLDB {
         return objects;
     }
 
-    public ArrayList<XMLObject> getObjectsByType(final String type) {
-        final ArrayList<XMLObject> match = new ArrayList<XMLObject>();
+    public List<XMLObject> getObjectsByType(final String type) {
+        final List<XMLObject> match = new ArrayList<XMLObject>();
         for (final XMLObject o : this.objects.values()) {
             if (type.equals(o.getType())) {
                 match.add(o);
@@ -185,7 +186,7 @@ public class XMLDB {
             throw new XMLDBException("xml database repository not defined");
         }
 
-        final FileLock _fl = new FileLock(this.xml_file);
+        final FileLock fl = new FileLock(this.xml_file);
         try {
             final DocumentBuilder db = XMLReader.getDocumentBuilder();
             this.doc = db.newDocument();
@@ -196,9 +197,9 @@ public class XMLDB {
             final Source source = new DOMSource(this.doc);
             final Result result = new StreamResult(this.xml_file);
 
-            final Transformer _t = TransformerFactory.newInstance().newTransformer();
-            _fl.lock();
-            _t.transform(source, result);
+            final Transformer t = TransformerFactory.newInstance().newTransformer();
+            fl.lock();
+            t.transform(source, result);
         } catch (final TransformerException e) {
             throw new XMLDBException(e.getMessage());
         } catch (final FileLockException e) {
@@ -206,7 +207,7 @@ public class XMLDB {
         } catch (final XMLException e) {
             throw new XMLDBException(e.getMessage());
         } finally {
-            _fl.unlockQuietly();
+            fl.unlockQuietly();
         }
     }
 
@@ -215,7 +216,7 @@ public class XMLDB {
         store();
     }
 
-    private void toNodeChilds(final Node n, final ArrayList<XMLAttribute> attributes) {
+    private void toNodeChilds(final Node n, final List<XMLAttribute> attributes) {
         for (final XMLAttribute a : attributes) {
             final Element e = this.doc.createElement("xmldb:attribute");
             e.setAttribute("name", a.getName());

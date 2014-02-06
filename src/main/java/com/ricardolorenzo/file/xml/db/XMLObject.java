@@ -28,53 +28,75 @@ import java.util.Map;
  */
 public class XMLObject {
     private String type;
-    private int id;
+    private final int id;
     private Map<Integer, XMLObject> objects;
     private Map<String, XMLAttribute> attributes;
 
-    public XMLObject(int id) {
+    public XMLObject(final int id) {
         this.id = Math.abs(id);
         this.objects = new HashMap<Integer, XMLObject>();
         this.attributes = new HashMap<String, XMLAttribute>();
     }
 
-    public XMLObject(String type, int id) {
+    public XMLObject(final String type, final int id) {
         this.type = type;
         this.id = Math.abs(id);
         this.objects = new HashMap<Integer, XMLObject>();
         this.attributes = new HashMap<String, XMLAttribute>();
     }
 
+    public void addAttribute(final XMLAttribute attribute) throws XMLDBException {
+        if ((attribute == null) || (attribute.getName() == null)) {
+            throw new XMLDBException("invalid attribute");
+        }
+        this.attributes.put(attribute.getName(), attribute);
+    }
+
+    public void addObject(final XMLObject object) throws XMLDBException {
+        if ((object == null) || (object.getId() == 0)) {
+            throw new XMLDBException("invalid object");
+        }
+        this.objects.put(object.getId(), object);
+    }
+
+    public XMLAttribute getAttribute(final String name) {
+        if (this.attributes.containsKey(name)) {
+            return this.attributes.get(name);
+        }
+        return null;
+    }
+
+    public List<XMLAttribute> getAttributes() {
+        return new ArrayList<XMLAttribute>(this.attributes.values());
+    }
+
     public int getId() {
         return this.id;
+    }
+
+    public List<XMLObject> getObjects() {
+        return new ArrayList<XMLObject>(this.objects.values());
+    }
+
+    public List<XMLObject> getObjectsByType(final String type) {
+        final List<XMLObject> match = new ArrayList<XMLObject>();
+        for (final XMLObject o : this.objects.values()) {
+            if (type.equals(o.getType())) {
+                match.add(o);
+            }
+        }
+        return match;
+    }
+
+    protected Map<Integer, XMLObject> getObjectsMap() {
+        return this.objects;
     }
 
     public String getType() {
         return this.type;
     }
 
-    public void addObject(XMLObject object) throws XMLDBException {
-        if (object == null || object.getId() == 0) {
-            throw new XMLDBException("invalid object");
-        }
-        this.objects.put(object.getId(), object);
-    }
-
-    public void addAttribute(XMLAttribute attribute) throws XMLDBException {
-        if (attribute == null || attribute.getName() == null) {
-            throw new XMLDBException("invalid attribute");
-        }
-        this.attributes.put(attribute.getName(), attribute);
-    }
-
-    public boolean hasObjects() {
-        if (!this.objects.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean hasAttribute(String name) {
+    public boolean hasAttribute(final String name) {
         if (this.attributes.containsKey(name)) {
             return true;
         }
@@ -88,82 +110,60 @@ public class XMLObject {
         return false;
     }
 
-    public List<XMLObject> getObjects() {
-        return new ArrayList<XMLObject>(this.objects.values());
-    }
-
-    protected Map<Integer, XMLObject> getObjectsMap() {
-        return this.objects;
-    }
-
-    public XMLAttribute getAttribute(String name) {
-        if (this.attributes.containsKey(name)) {
-            return this.attributes.get(name);
+    public boolean hasObjects() {
+        if (!this.objects.isEmpty()) {
+            return true;
         }
-        return null;
+        return false;
     }
 
-    public ArrayList<XMLAttribute> getAttributes() {
-        return new ArrayList<XMLAttribute>(this.attributes.values());
-    }
-
-    public ArrayList<XMLObject> getObjectsByType(String type) {
-        ArrayList<XMLObject> match = new ArrayList<XMLObject>();
-        for (XMLObject o : this.objects.values()) {
-            if (type.equals(o.getType())) {
-                match.add(o);
-            }
-        }
-        return match;
-    }
-
-    public void setObjects(List<XMLObject> objects) throws XMLDBException {
-        if (objects == null) {
-            throw new XMLDBException("invalid objects");
-        }
-        this.objects = new HashMap<Integer, XMLObject>();
-        for (XMLObject object : objects) {
-            this.objects.put(object.getId(), object);
-        }
-    }
-
-    public void setObjects(Map<Integer, XMLObject> objects) throws XMLDBException {
-        if (objects == null) {
-            throw new XMLDBException("invalid objects");
-        }
-        this.objects = objects;
-    }
-
-    public void setAttributes(List<XMLAttribute> attributes) throws XMLDBException {
-        if (attributes == null) {
-            throw new XMLDBException("invalid attributes");
-        }
-        this.attributes = new HashMap<String, XMLAttribute>();
-        for (XMLAttribute attribute : attributes) {
-            this.attributes.put(attribute.getName(), attribute);
-        }
-    }
-
-    public void removeObject(String id) throws XMLDBException {
-        if (id == null) {
-            throw new XMLDBException("invalid object id");
-        }
-        this.objects.remove(String.valueOf(id));
-    }
-
-    public void removeAttribute(XMLAttribute attribute) throws XMLDBException {
+    public void removeAttribute(final XMLAttribute attribute) throws XMLDBException {
         if (attribute == null) {
             throw new XMLDBException("invalid attribute");
         }
         for (int i = this.attributes.size(); --i >= 0;) {
-            XMLAttribute a = this.attributes.get(i);
+            final XMLAttribute a = this.attributes.get(i);
             if (a.getType().equals(attribute.getType()) && a.getName().equals(attribute.getName())) {
                 this.attributes.remove(i);
             }
         }
     }
 
-    public void setType(String type) {
+    public void removeObject(final String id) throws XMLDBException {
+        if (id == null) {
+            throw new XMLDBException("invalid object id");
+        }
+        this.objects.remove(String.valueOf(id));
+    }
+
+    public void setAttributes(final List<XMLAttribute> attributes) throws XMLDBException {
+        if (attributes == null) {
+            throw new XMLDBException("invalid attributes");
+        }
+        this.attributes = new HashMap<String, XMLAttribute>();
+        for (final XMLAttribute attribute : attributes) {
+            this.attributes.put(attribute.getName(), attribute);
+        }
+    }
+
+    public void setObjects(final List<XMLObject> objects) throws XMLDBException {
+        if (objects == null) {
+            throw new XMLDBException("invalid objects");
+        }
+        this.objects = new HashMap<Integer, XMLObject>();
+        for (final XMLObject object : objects) {
+            this.objects.put(object.getId(), object);
+        }
+    }
+
+    public void setObjects(final Map<Integer, XMLObject> objects) throws XMLDBException {
+        if (objects == null) {
+            throw new XMLDBException("invalid objects");
+        }
+        this.objects = objects;
+    }
+
+    public void setType(final String type) {
         this.type = type;
     }
 }

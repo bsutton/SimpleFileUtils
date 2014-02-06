@@ -28,7 +28,19 @@ import java.util.List;
 import com.ricardolorenzo.file.xml.XMLException;
 
 public class XMLParser {
+    private static String removeISOControlCharacters(final String s) {
+        final char[] array = s.toCharArray();
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            if (!Character.isISOControl(array[i])) {
+                sb.append(array[i]);
+            }
+        }
+        return sb.toString();
+    }
+
     private final List<Object> tokens;
+
     private String encoding = null;
 
     public XMLParser(String xmlContent) throws XMLException {
@@ -42,50 +54,28 @@ public class XMLParser {
         }
     }
 
-    public String getEncoding() {
-        return this.encoding;
+    public String getContent() {
+        final StringBuilder sb = new StringBuilder();
+        for (final Object tok : this.tokens) {
+            if (TagToken.class.isInstance(tok)) {
+                sb.append(TagToken.class.cast(tok).getName().concat(" "));
+            } else if (TextToken.class.isInstance(tok)) {
+                sb.append(TextToken.class.cast(tok).getText().concat(" "));
+            }
+        }
+        return sb.toString();
     }
 
     public Reader getContentReader() {
         try {
-            final StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < this.tokens.size(); i++) {
-                final Object tok = this.tokens.get(i);
-                if (tok instanceof TagToken) {
-                    sb.append(((TagToken) this.tokens.get(i)).getName().concat(" "));
-                } else if (tok instanceof TextToken) {
-                    sb.append(((TextToken) this.tokens.get(i)).getText().concat(" "));
-                }
-            }
-            final Reader reader = new StringReader(sb.toString());
-            return reader;
-        } catch (Exception e) {
+            return new StringReader(getContent());
+        } catch (final Exception e) {
             return new StringReader("");
         }
     }
 
-    private static String removeISOControlCharacters(final String s) {
-        final char[] array = s.toCharArray();
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            if (!Character.isISOControl(array[i])) {
-                sb.append(array[i]);
-            }
-        }
-        return sb.toString();
-    }
-
-    public String getContent() {
-        final StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < this.tokens.size(); i++) {
-            final Object tok = this.tokens.get(i);
-            if (tok instanceof TagToken) {
-                sb.append(((TagToken) this.tokens.get(i)).getName().concat(" "));
-            } else if (tok instanceof TextToken) {
-                sb.append(((TextToken) this.tokens.get(i)).getText().concat(" "));
-            }
-        }
-        return sb.toString();
+    public String getEncoding() {
+        return this.encoding;
     }
 
     public List<Object> getTokens() {
@@ -101,16 +91,6 @@ public class XMLParser {
         return -1;
     }
 
-    private char[] substring(final char array[], final int start, final int end) throws Exception {
-        final char string[] = new char[(end - start) + 1];
-        int j = 0;
-        for (int i = start; (i < end) && (i < array.length); i++) {
-            string[j] = array[i];
-            j++;
-        }
-        return string;
-    }
-
     private void parse(final char[] data) throws XMLException {
         char separator = '>';
         String token = new String();
@@ -118,7 +98,7 @@ public class XMLParser {
         int offset = -1;
         try {
             index = indexOf('<', data, 0);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // nothing
         }
         try {
@@ -158,8 +138,18 @@ public class XMLParser {
                     separator = '<';
                 }
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new XMLException(e.getMessage());
         }
+    }
+
+    private char[] substring(final char array[], final int start, final int end) throws Exception {
+        final char string[] = new char[(end - start) + 1];
+        int j = 0;
+        for (int i = start; (i < end) && (i < array.length); i++) {
+            string[j] = array[i];
+            j++;
+        }
+        return string;
     }
 }

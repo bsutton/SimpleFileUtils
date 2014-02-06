@@ -25,48 +25,48 @@ import java.io.IOException;
  * 
  */
 public class FileLock {
-    private File lock_file;
+    private final File lock_file;
 
     public FileLock(final File file) {
-        lock_file = new File(file.getAbsolutePath(), ".lock");
+        this.lock_file = new File(file.getAbsolutePath(), ".lock");
+    }
+
+    private void checkLock() throws FileLockAlreadyLockedException, InterruptedException {
+        for (int i = 16; --i >= 0;) {
+            if (!this.lock_file.exists()) {
+                return;
+            }
+            Thread.sleep(250L);
+        }
+        throw new FileLockAlreadyLockedException("permanently locked file");
     }
 
     public void lock() throws FileLockException {
         try {
             checkLock();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new FileLockException("fail to sleep thread in check");
         }
         try {
-            lock_file.createNewFile();
-        } catch (IOException e) {
+            this.lock_file.createNewFile();
+        } catch (final IOException e) {
             throw new FileLockException("cannot create file lock");
         }
     }
 
     public void unlock() throws FileLockException {
-        if (lock_file.exists()) {
-            if (!lock_file.delete()) {
+        if (this.lock_file.exists()) {
+            if (!this.lock_file.delete()) {
                 throw new FileLockException("cannot delete file lock");
             }
         }
     }
 
     public void unlockQuietly() {
-        if (lock_file.exists()) {
-            if (!lock_file.delete()) {
+        if (this.lock_file.exists()) {
+            if (!this.lock_file.delete()) {
                 // nothing
             }
         }
-    }
-
-    private void checkLock() throws FileLockAlreadyLockedException, InterruptedException {
-        for (int i = 16; --i >= 0;) {
-            if (!lock_file.exists()) {
-                return;
-            }
-            Thread.sleep(250L);
-        }
-        throw new FileLockAlreadyLockedException("permanently locked file");
     }
 }

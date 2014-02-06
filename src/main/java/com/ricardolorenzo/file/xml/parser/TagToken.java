@@ -30,8 +30,75 @@ public class TagToken {
     public static final char SLASH = '/';
     public static final char SEP_I = '<';
     public static final char SEP_F = '>';
+
+    private static boolean isWhitespace(final char c) {
+        return ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r'));
+    }
+
+    private static Object[] tokenizeString(final String s) {
+        if ((s == null) || (s.length() == 0)) {
+            return null;
+        }
+        boolean whitespace = false;
+        boolean escaped = false;
+        boolean quoted = false;
+        int length;
+
+        final List<String> tokens = new ArrayList<String>();
+        StringBuilder buffer = new StringBuilder(255);
+        final char[] array = s.toCharArray();
+        length = array.length;
+        for (int i = 0; i < length; i++) {
+            if (array[i] == SEP_I) {
+                continue;
+            }
+            if (array[i] == SEP_F) {
+                break;
+            }
+            if (!quoted && (i > (array.length - 2)) && (array[i] == SLASH)) {
+                tokens.add(buffer.toString());
+                buffer = new StringBuilder(120);
+                buffer.append(array[i]);
+                continue;
+            }
+            if (whitespace) {
+                if (isWhitespace(array[i])) {
+                    continue;
+                } else {
+                    whitespace = false;
+                }
+            }
+            if (escaped) {
+                escaped = false;
+                continue;
+            } else {
+                if (array[i] == ESCAPE) {
+                    escaped = true;
+                    continue;
+                }
+                if (array[i] == QUOTE) {
+                    quoted = !quoted;
+                    continue;
+                }
+                if (!quoted && isWhitespace(array[i])) {
+                    tokens.add(buffer.toString());
+                    buffer = new StringBuilder(120);
+                    whitespace = true;
+                    continue;
+                }
+                buffer.append(array[i]);
+            }
+        }
+        if (!whitespace) {
+            tokens.add(buffer.toString());
+        }
+        return tokens.toArray();
+    }
+
     private String name;
+
     private boolean end = false;
+
     private final AttributeList attr;
 
     public TagToken(final String line) {
@@ -65,10 +132,6 @@ public class TagToken {
 
     public boolean isEndTag() {
         return this.end;
-    }
-
-    private static boolean isWhitespace(final char c) {
-        return ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r'));
     }
 
     private void setAttribute(final String s) {
@@ -134,66 +197,6 @@ public class TagToken {
                 setAttribute(token);
             }
         }
-    }
-
-    private static Object[] tokenizeString(final String s) {
-        if ((s == null) || (s.length() == 0)) {
-            return null;
-        }
-        boolean whitespace = false;
-        boolean escaped = false; // Verdadero si el siguiente caracter est�a escapado.
-        boolean quoted = false; // Verdadero si est�a entre comillas.
-        int length;
-
-        final List<String> tokens = new ArrayList<String>();
-        StringBuilder buffer = new StringBuilder(255);
-        final char[] array = s.toCharArray();
-        length = array.length;
-        for (int i = 0; i < length; i++) {
-            if (array[i] == SEP_I) {
-                continue;
-            }
-            if (array[i] == SEP_F) {
-                break;
-            }
-            if (!quoted && (i > (array.length - 2)) && (array[i] == SLASH)) {
-                tokens.add(buffer.toString());
-                buffer = new StringBuilder(120);
-                buffer.append(array[i]);
-                continue;
-            }
-            if (whitespace) {
-                if (isWhitespace(array[i])) {
-                    continue;
-                } else {
-                    whitespace = false;
-                }
-            }
-            if (escaped) {
-                escaped = false;
-                continue;
-            } else {
-                if (array[i] == ESCAPE) {
-                    escaped = true;
-                    continue;
-                }
-                if (array[i] == QUOTE) {
-                    quoted = !quoted;
-                    continue;
-                }
-                if (!quoted && isWhitespace(array[i])) {
-                    tokens.add(buffer.toString());
-                    buffer = new StringBuilder(120);
-                    whitespace = true;
-                    continue;
-                }
-                buffer.append(array[i]);
-            }
-        }
-        if (!whitespace) {
-            tokens.add(buffer.toString());
-        }
-        return tokens.toArray();
     }
 
     @Override

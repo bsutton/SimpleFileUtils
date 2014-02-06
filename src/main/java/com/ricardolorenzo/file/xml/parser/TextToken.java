@@ -22,29 +22,26 @@ package com.ricardolorenzo.file.xml.parser;
  * @author Ricardo Lorenzo
  */
 public class TextToken {
-    private StringBuffer text;
+    private StringBuilder text;
 
     public TextToken() {
-        text = new StringBuffer();
+        this.text = new StringBuilder();
     }
 
-    public void appendText(String more) {
-        text.append(more);
+    public void appendText(final String more) {
+        this.text.append(more);
     }
 
     public String getText() {
-        return text.toString();
+        return this.text.toString();
     }
 
-    public void setText(String newText) {
-        text = new StringBuffer(newText);
+    public void setText(final String newText) {
+        this.text = new StringBuilder(newText);
     }
 
-    public void setText(StringBuffer newText) {
-        text = newText;
-    }
-
+    @Override
     public String toString() {
-        return text.toString();
+        return this.text.toString();
     }
 }

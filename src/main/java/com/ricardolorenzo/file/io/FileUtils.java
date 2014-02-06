@@ -39,46 +39,6 @@ import com.ricardolorenzo.file.security.FileSummation;
  * 
  */
 public class FileUtils {
-    public static final void copyFile(final File f1, final File f2) throws IOException, FileLockException {
-        if (f1.exists() && f1.isDirectory()) {
-            if (!f2.exists()) {
-                f2.mkdirs();
-            }
-            for (File f : f1.listFiles()) {
-                copyFile(f, new File(f2.getAbsolutePath() + File.separator + f.getName()));
-            }
-        } else if (f1.exists() && f1.isFile()) {
-            FileLock fl = new FileLock(f2);
-            try {
-                fl.lock();
-                InputStream is = new BufferedInputStream(new FileInputStream(f1));
-                OutputStream os = new BufferedOutputStream(new FileOutputStream(f2));
-
-                try {
-                    IOStreamUtils.write(is, os);
-                } finally {
-                    IOStreamUtils.closeQuietly(is);
-                    IOStreamUtils.closeQuietly(os);
-                }
-            } finally {
-                fl.unlock();
-            }
-        }
-    }
-
-    public static void emptyFile(final File file) throws IOException, FileLockException {
-        BufferedOutputStream os = null;
-        FileLock fl = new FileLock(file);
-        try {
-            os = new BufferedOutputStream(new FileOutputStream(file));
-            fl.lock();
-            os.write("".getBytes());
-        } finally {
-            fl.unlockQuietly();
-            IOStreamUtils.closeQuietly(os);
-        }
-    }
-
     /**
      * Compress bytes into different formats
      * 
@@ -86,44 +46,8 @@ public class FileUtils {
      *             , IOException
      * */
     public static byte[] compress(final int type, final byte[] input) throws IOException, NoSuchMethodException {
-        ByteArrayInputStream is = new ByteArrayInputStream(input);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        try {
-            IOStreamUtils.compress(type, is, os);
-        } finally {
-            IOStreamUtils.closeQuietly(is);
-            IOStreamUtils.closeQuietly(os);
-        }
-        return os.toByteArray();
-    }
-
-    /**
-     * Decompress bytes into different formats
-     * 
-     * @throws NoSuchMethodException
-     *             , IOException
-     * */
-    public static void decompress(final int type, final File input, final File output) throws IOException,
-            NoSuchMethodException {
-        FileInputStream is = new FileInputStream(input);
-        FileOutputStream os = new FileOutputStream(output);
-        try {
-            IOStreamUtils.compress(type, is, os);
-        } finally {
-            IOStreamUtils.closeQuietly(is);
-            IOStreamUtils.closeQuietly(os);
-        }
-    }
-
-    /**
-     * Decompress bytes into different formats
-     * 
-     * @throws NoSuchMethodException
-     *             , IOException
-     * */
-    public static byte[] decompress(final int type, final byte[] input) throws IOException, NoSuchMethodException {
-        ByteArrayInputStream is = new ByteArrayInputStream(input);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final ByteArrayInputStream is = new ByteArrayInputStream(input);
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             IOStreamUtils.compress(type, is, os);
         } finally {
@@ -141,8 +65,8 @@ public class FileUtils {
      * */
     public static void compress(final int type, final File input, final File output) throws IOException,
             NoSuchMethodException {
-        FileInputStream is = new FileInputStream(input);
-        FileOutputStream os = new FileOutputStream(output);
+        final FileInputStream is = new FileInputStream(input);
+        final FileOutputStream os = new FileOutputStream(output);
         try {
             IOStreamUtils.compress(type, is, os);
         } finally {
@@ -151,9 +75,91 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Copy the file content into another
+     * 
+     * @throws NoSuchMethodException
+     *             , IOException
+     * */
+    public static final void copyFile(final File f1, final File f2) throws IOException, FileLockException {
+        if (f1.exists() && f1.isDirectory()) {
+            if (!f2.exists()) {
+                f2.mkdirs();
+            }
+            for (final File f : f1.listFiles()) {
+                copyFile(f, new File(f2.getAbsolutePath() + File.separator + f.getName()));
+            }
+        } else if (f1.exists() && f1.isFile()) {
+            final FileLock fl = new FileLock(f2);
+            try {
+                fl.lock();
+                final InputStream is = new BufferedInputStream(new FileInputStream(f1));
+                final OutputStream os = new BufferedOutputStream(new FileOutputStream(f2));
+
+                try {
+                    IOStreamUtils.write(is, os);
+                } finally {
+                    IOStreamUtils.closeQuietly(is);
+                    IOStreamUtils.closeQuietly(os);
+                }
+            } finally {
+                fl.unlock();
+            }
+        }
+    }
+
+    /**
+     * Decompress bytes into different formats
+     * 
+     * @throws NoSuchMethodException
+     *             , IOException
+     * */
+    public static byte[] decompress(final int type, final byte[] input) throws IOException, NoSuchMethodException {
+        final ByteArrayInputStream is = new ByteArrayInputStream(input);
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        decompress(type, is, os);
+        return os.toByteArray();
+    }
+
+    /**
+     * Decompress bytes into different formats
+     * 
+     * @throws NoSuchMethodException
+     *             , IOException
+     * */
+    public static void decompress(final int type, final File input, final File output) throws IOException,
+            NoSuchMethodException {
+        final FileInputStream is = new FileInputStream(input);
+        final FileOutputStream os = new FileOutputStream(output);
+        decompress(type, is, os);
+    }
+
+    private static void decompress(final int type, final InputStream is, final OutputStream os)
+            throws NoSuchMethodException, IOException {
+        try {
+            IOStreamUtils.compress(type, is, os);
+        } finally {
+            IOStreamUtils.closeQuietly(is);
+            IOStreamUtils.closeQuietly(os);
+        }
+    }
+
+    public static void emptyFile(final File file) throws IOException, FileLockException {
+        BufferedOutputStream os = null;
+        final FileLock fl = new FileLock(file);
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(file));
+            fl.lock();
+            os.write("".getBytes());
+        } finally {
+            fl.unlockQuietly();
+            IOStreamUtils.closeQuietly(os);
+        }
+    }
+
     public static byte[] readFile(final File file) throws IOException {
         FileInputStream is = null;
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             is = new FileInputStream(file);
             IOStreamUtils.write(is, os);
@@ -185,15 +191,15 @@ public class FileUtils {
         }
 
         FileOutputStream os = null;
-        FileLock fl = new FileLock(file);
+        final FileLock fl = new FileLock(file);
         try {
             fl.lock();
-            ByteArrayInputStream is = new ByteArrayInputStream(content);
+            final ByteArrayInputStream is = new ByteArrayInputStream(content);
             try {
                 os = new FileOutputStream(file);
                 IOStreamUtils.write(is, os);
                 return true;
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 return false;
             } finally {
                 IOStreamUtils.closeQuietly(is);
