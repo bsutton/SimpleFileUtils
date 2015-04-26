@@ -87,7 +87,7 @@ public class FileUtils {
                 f2.mkdirs();
             }
             for (final File f : f1.listFiles()) {
-                copyFile(f, new File(f2.getAbsolutePath() + File.separator + f.getName()));
+                copyFile(f, new File(f2.getAbsolutePath() , f.getName()));
             }
         } else if (f1.exists() && f1.isFile()) {
             final FileLock fl = new FileLock(f2);

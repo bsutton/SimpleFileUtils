@@ -28,7 +28,7 @@ public class FileLock {
     private final File lock_file;
 
     public FileLock(final File file) {
-        this.lock_file = new File(file.getAbsolutePath(), ".lock");
+        this.lock_file = new File(file.getAbsolutePath() + ".lock");
     }
 
     private void checkLock() throws FileLockAlreadyLockedException, InterruptedException {
